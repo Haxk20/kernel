@@ -29,6 +29,7 @@
 #include <linux/export.h>
 #include <linux/mm.h>
 #include <linux/mm_types.h>
+#include <linux/module.h>
 #include <linux/rbtree.h>
 #include <linux/slab.h>
 #include <linux/seq_file.h>
@@ -1323,3 +1324,6 @@ debugfs_done:
 	return idev;
 }
 EXPORT_SYMBOL(ion_device_create);
+
+MODULE_LICENSE("GPL v2");
+MODULE_DESCRIPTION("Ion memory allocator");

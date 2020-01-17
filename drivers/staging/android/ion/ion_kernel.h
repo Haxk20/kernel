@@ -16,7 +16,7 @@
 #include <linux/dma-buf.h>
 #include "../uapi/ion.h"
 
-#ifdef CONFIG_ION
+#if IS_ENABLED(CONFIG_ION)
 
 /*
  * Allocates an ion buffer.
