@@ -652,7 +652,7 @@ int msm_camera_get_dt_power_setting_data(struct device_node *of_node,
 		need_reverse = 1;
 
 	power_info->power_down_setting =
-		kzalloc(sizeof(*ps) * size, GFP_KERNEL);
+		kcalloc(size, sizeof(*ps), GFP_KERNEL);
 
 	if (!power_info->power_down_setting) {
 		pr_err("%s failed %d\n", __func__, __LINE__);
@@ -1276,8 +1276,8 @@ static int msm_camera_disable_i2c_mux(struct msm_camera_i2c_conf *i2c_conf)
 }
 
 int msm_camera_pinctrl_init(
-	struct msm_pinctrl_info *sensor_pctrl, struct device *dev) {
-
+	struct msm_pinctrl_info *sensor_pctrl, struct device *dev)
+{
 	sensor_pctrl->pinctrl = devm_pinctrl_get(dev);
 	if (IS_ERR_OR_NULL(sensor_pctrl->pinctrl)) {
 		pr_err("%s:%d Getting pinctrl handle failed\n",
@@ -1304,8 +1304,8 @@ int msm_camera_pinctrl_init(
 }
 
 static int msm_cam_sensor_handle_reg_gpio(int seq_val,
-	struct msm_camera_gpio_conf *gconf, int val) {
-
+	struct msm_camera_gpio_conf *gconf, int val)
+{
 	int gpio_offset = -1;
 
 	if (!gconf) {
@@ -1467,8 +1467,8 @@ int msm_camera_power_up(struct msm_camera_power_ctrl_t *ctrl,
 				goto power_up_failed;
 			}
 			if (power_setting->config_val)
-				ctrl->clk_info[power_setting->seq_val].
-					clk_rate = power_setting->config_val;
+				ctrl->clk_info[power_setting->seq_val]
+					.clk_rate = power_setting->config_val;
 			rc = msm_camera_clk_enable(ctrl->dev,
 				ctrl->clk_info, ctrl->clk_ptr,
 				ctrl->clk_info_size, true);
@@ -1753,4 +1753,3 @@ int msm_camera_power_down(struct msm_camera_power_ctrl_t *ctrl,
 	CDBG("%s exit\n", __func__);
 	return 0;
 }
-

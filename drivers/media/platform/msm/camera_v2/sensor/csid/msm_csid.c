@@ -188,12 +188,12 @@ static void msm_csid_set_debug_reg(struct csid_device *csid_dev,
 	} else {
 		if (csid_dev->csid_3p_enabled == 1) {
 			val = ((1 << csid_params->lane_cnt) - 1) <<
-				csid_dev->ctrl_reg->
-				csid_reg.csid_err_lane_overflow_offset_3p;
+			csid_dev->ctrl_reg->csid_reg
+				.csid_err_lane_overflow_offset_3p;
 		} else {
 			val = ((1 << csid_params->lane_cnt) - 1) <<
-				csid_dev->ctrl_reg->
-				csid_reg.csid_err_lane_overflow_offset_2p;
+			csid_dev->ctrl_reg->csid_reg
+				.csid_err_lane_overflow_offset_2p;
 		}
 		val |= csid_dev->ctrl_reg->csid_reg.csid_irq_mask_val;
 		msm_camera_vio_w(val, csid_dev->base,
@@ -222,12 +222,12 @@ static void msm_csid_set_debug_reg(struct csid_device *csid_dev,
 	} else {
 		if (csid_dev->csid_3p_enabled == 1) {
 			val = ((1 << csid_params->lane_cnt) - 1) <<
-				csid_dev->ctrl_reg->
-				csid_reg.csid_err_lane_overflow_offset_3p;
+			csid_dev->ctrl_reg->csid_reg
+				.csid_err_lane_overflow_offset_3p;
 		} else {
 			val = ((1 << csid_params->lane_cnt) - 1) <<
-				csid_dev->ctrl_reg->
-				csid_reg.csid_err_lane_overflow_offset_2p;
+			csid_dev->ctrl_reg->csid_reg
+				.csid_err_lane_overflow_offset_2p;
 		}
 		val |= csid_dev->ctrl_reg->csid_reg.csid_irq_mask_val;
 		val |= SHORT_PKT_OFFSET;
@@ -241,7 +241,9 @@ static void msm_csid_set_debug_reg(struct csid_device *csid_dev,
 }
 #else
 static void msm_csid_set_debug_reg(struct csid_device *csid_dev,
-	struct msm_camera_csid_params *csid_params) {}
+	struct msm_camera_csid_params *csid_params)
+{
+}
 #endif
 
 static void msm_csid_set_sof_freeze_debug_reg(
@@ -269,12 +271,12 @@ static void msm_csid_set_sof_freeze_debug_reg(
 
 	if (csid_dev->csid_3p_enabled == 1) {
 		val = ((1 << csid_dev->current_csid_params.lane_cnt) - 1) <<
-			csid_dev->ctrl_reg->
-			csid_reg.csid_err_lane_overflow_offset_3p;
+			csid_dev->ctrl_reg->csid_reg
+				.csid_err_lane_overflow_offset_3p;
 	} else {
 		val = ((1 << csid_dev->current_csid_params.lane_cnt) - 1) <<
-			csid_dev->ctrl_reg->
-			csid_reg.csid_err_lane_overflow_offset_2p;
+			csid_dev->ctrl_reg->csid_reg
+				.csid_err_lane_overflow_offset_2p;
 	}
 	val |= csid_dev->ctrl_reg->csid_reg.csid_irq_mask_val;
 	val |= SHORT_PKT_OFFSET;
@@ -308,8 +310,8 @@ static int msm_csid_reset(struct csid_device *csid_dev)
 			CSID_TIMEOUT);
 	}
 	if (rc < 0) {
-		pr_err("wait_for_completion in msm_csid_reset fail rc = %d\n",
-			rc);
+		pr_err("wait_for_completion in %s fail rc = %d\n",
+			__func__, rc);
 	} else if (rc == 0) {
 		irq = msm_camera_vio_r(csid_dev->base,
 			csid_dev->ctrl_reg->csid_reg.csid_irq_status_addr,
@@ -471,8 +473,7 @@ static int msm_csid_config(struct csid_device *csid_dev,
 	if (!msm_csid_find_max_clk_rate(csid_dev))
 		pr_err("msm_csid_find_max_clk_rate failed\n");
 
-	clk_rate = (csid_params->csi_clk > 0) ?
-				(csid_params->csi_clk) : csid_dev->csid_max_clk;
+	clk_rate = csid_dev->csid_max_clk;
 
 	clk_rate = msm_camera_clk_set_rate(&csid_dev->pdev->dev,
 		csid_dev->csid_clk[csid_dev->csid_clk_index], clk_rate);
@@ -530,8 +531,8 @@ static int msm_csid_config(struct csid_device *csid_dev,
 				PHY_LANE_MAX){
 				pr_err("%s:%d invalid lane map %d\n",
 					__func__, __LINE__,
-					csid_dev->ctrl_reg->
-					csid_lane_assign[lane_num]);
+					csid_dev->ctrl_reg->csid_lane_assign[
+						lane_num]);
 				return -EINVAL;
 			}
 			lane_assign |=
@@ -617,8 +618,8 @@ static irqreturn_t msm_csid_irq(int irq_num, void *data)
 		complete(&csid_dev->reset_complete);
 	if (irq & SHORT_PKT_OFFSET) {
 		short_dt = msm_camera_io_r(csid_dev->base +
-			csid_dev->ctrl_reg->
-			csid_reg.csid_captured_short_pkt_addr);
+			csid_dev->ctrl_reg->csid_reg
+				.csid_captured_short_pkt_addr);
 		count = (short_dt >> 8) & 0xffff;
 		dt =  short_dt >> 24;
 		CDBG("CSID:: %s:%d core %d dt: 0x%x, count: %d\n",
@@ -1280,7 +1281,7 @@ static int csid_probe(struct platform_device *pdev)
 	if (!new_csid_dev)
 		return -ENOMEM;
 
-	CDBG("%s: csid_probe entry\n", __func__);
+	CDBG("%s: entry\n", __func__);
 
 	new_csid_dev->csid_3p_enabled = 0;
 	new_csid_dev->ctrl_reg = NULL;
@@ -1324,9 +1325,7 @@ static int csid_probe(struct platform_device *pdev)
 		&new_csid_dev->csid_clk, &new_csid_dev->num_clk);
 	if (rc < 0) {
 		pr_err("%s: msm_camera_get_clk_info failed", __func__);
-		if (rc != -EPROBE_DEFER)
-			rc = -EFAULT;
-
+		rc = -EFAULT;
 		goto csid_no_resource;
 	}
 

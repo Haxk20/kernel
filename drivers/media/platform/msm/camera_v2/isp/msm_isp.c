@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2018, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2013-2019, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -36,14 +36,6 @@
 #include "msm_isp40.h"
 #include "msm_isp32.h"
 #include "msm_cam_cx_ipeak.h"
-
-#if defined(CONFIG_SONY_CAM_V4L2) && defined(CONFIG_MSM_AVTIMER)
-extern int avcs_core_open(void);
-extern int avcs_core_disable_power_collapse(int enable);
-extern int avcs_core_query_timer(uint64_t *avtimer_tick);
-
-static struct avtimer_fptr_t avtimer_func;
-#endif
 
 static struct msm_sd_req_vb2_q vfe_vb2_ops;
 static struct msm_isp_buf_mgr vfe_buf_mgr;
@@ -325,12 +317,12 @@ void msm_isp_update_req_history(uint32_t client, uint64_t ab,
 		ib;
 
 	for (i = 0; i < MAX_ISP_CLIENT; i++) {
-		msm_isp_bw_request_history[msm_isp_bw_request_history_idx].
-			client_info[i].active = client_info[i].active;
-		msm_isp_bw_request_history[msm_isp_bw_request_history_idx].
-			client_info[i].ab = client_info[i].ab;
-		msm_isp_bw_request_history[msm_isp_bw_request_history_idx].
-			client_info[i].ib = client_info[i].ib;
+		msm_isp_bw_request_history[msm_isp_bw_request_history_idx]
+			.client_info[i].active = client_info[i].active;
+		msm_isp_bw_request_history[msm_isp_bw_request_history_idx]
+			.client_info[i].ab = client_info[i].ab;
+		msm_isp_bw_request_history[msm_isp_bw_request_history_idx]
+			.client_info[i].ib = client_info[i].ib;
 	}
 
 	msm_isp_bw_request_history_idx = (msm_isp_bw_request_history_idx + 1)
@@ -585,13 +577,11 @@ static int vfe_probe(struct platform_device *pdev)
 	}
 
 	vfe_parent_dev->common_sd->common_data = &vfe_common_data;
-	memset(&vfe_common_data, 0, sizeof(vfe_common_data));
 	mutex_init(&vfe_common_data.vfe_common_mutex);
 	spin_lock_init(&vfe_common_data.common_dev_data_lock);
-	spin_lock_init(&vfe_common_data.vfe_irq_dump.
-			common_dev_irq_dump_lock);
-	spin_lock_init(&vfe_common_data.vfe_irq_dump.
-			common_dev_tasklet_dump_lock);
+	spin_lock_init(&vfe_common_data.vfe_irq_dump.common_dev_irq_dump_lock);
+	spin_lock_init(
+		&vfe_common_data.vfe_irq_dump.common_dev_tasklet_dump_lock);
 	for (i = 0; i < (VFE_AXI_SRC_MAX * MAX_VFE); i++)
 		spin_lock_init(&(vfe_common_data.streams[i].lock));
 	for (i = 0; i < (MSM_ISP_STATS_MAX * MAX_VFE); i++)
@@ -633,14 +623,6 @@ static int vfe_probe(struct platform_device *pdev)
 
 	vfe_parent_dev->num_sd = vfe_parent_dev->num_hw_sd;
 	vfe_parent_dev->pdev = pdev;
-
-#if defined(CONFIG_SONY_CAM_V4L2) && defined(CONFIG_MSM_AVTIMER)
-	avtimer_func.fptr_avtimer_open = avcs_core_open;
-	avtimer_func.fptr_avtimer_enable = avcs_core_disable_power_collapse;
-	avtimer_func.fptr_avtimer_get_time = avcs_core_query_timer;
-
-	msm_isp_set_avtimer_fptr(avtimer_func);
-#endif
 
 	return rc;
 

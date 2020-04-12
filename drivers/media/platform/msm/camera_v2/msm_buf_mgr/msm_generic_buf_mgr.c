@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2018, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2013-2019, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -281,10 +281,10 @@ static void msm_buf_mngr_contq_listdel(struct msm_buf_mngr_device *dev,
 		cont_save, &dev->cont_qhead, entry) {
 		if ((cont_bufs->sessid == session) &&
 		(cont_bufs->strid == stream)) {
-			cnt--;
-			if (cnt == 0 && unmap) {
+			if (cnt == 1 && unmap == 1) {
+				/* dma_buf_vunmap ignored vaddr(2nd argument) */
 				dma_buf_vunmap(cont_bufs->dmabuf,
-					       cont_bufs->paddr);
+					cont_bufs->paddr);
 				rc = dma_buf_end_cpu_access(cont_bufs->dmabuf,
 					DMA_BIDIRECTIONAL);
 				if (rc) {
@@ -296,6 +296,7 @@ static void msm_buf_mngr_contq_listdel(struct msm_buf_mngr_device *dev,
 			}
 			list_del_init(&cont_bufs->entry);
 			kfree(cont_bufs);
+			cnt--;
 		}
 	}
 	if (cnt != 0)
@@ -356,7 +357,7 @@ static int msm_buf_mngr_handle_cont_cmd(struct msm_buf_mngr_device *dev,
 {
 	int rc = 0, i = 0;
 	struct dma_buf *dmabuf = NULL;
-	struct msm_camera_user_buf_cont_t *temp_addr, *iaddr = NULL;
+	struct msm_camera_user_buf_cont_t *iaddr, *temp_addr;
 	struct msm_buf_mngr_user_buf_cont_info *new_entry, *bufs, *save;
 	size_t size;
 
@@ -466,10 +467,8 @@ free_list:
 				cont_cmd->stream_id, 0, i);
 		}
 	}
-
-	if (iaddr)
-		dma_buf_vunmap(dmabuf, iaddr);
-
+	// ion_unmap_kernel(dev->ion_client, ion_handle);
+	dma_buf_vunmap(dmabuf, iaddr);
 	rc = dma_buf_end_cpu_access(dmabuf, DMA_BIDIRECTIONAL);
 	if (rc) {
 		pr_err("Failed in end cpu access, dmabuf=%pK", dmabuf);
@@ -612,6 +611,7 @@ static long msm_buf_mngr_subdev_ioctl(struct v4l2_subdev *sd,
 				}
 				k_ioctl.ioctl_ptr = (uintptr_t)&buf_info;
 			}
+
 			argp = &k_ioctl;
 			rc = msm_cam_buf_mgr_ops(cmd, argp);
 			}
@@ -670,8 +670,7 @@ static long msm_camera_buf_mgr_fetch_buf_info(
 	buf_info->frame_id = buf_info32->frame_id;
 	buf_info->index = buf_info32->index;
 	buf_info->timestamp.tv_sec = (long) buf_info32->timestamp.tv_sec;
-	buf_info->timestamp.tv_usec = (long) buf_info32->
-					timestamp.tv_usec;
+	buf_info->timestamp.tv_usec = (long) buf_info32->timestamp.tv_usec;
 	buf_info->reserved = buf_info32->reserved;
 	buf_info->type = buf_info32->type;
 	return 0;
@@ -687,10 +686,8 @@ static long msm_camera_buf_mgr_update_buf_info(
 	buf_info32->session_id = buf_info->session_id;
 	buf_info32->stream_id = buf_info->stream_id;
 	buf_info32->index = buf_info->index;
-	buf_info32->timestamp.tv_sec = (int32_t) buf_info->
-						timestamp.tv_sec;
-	buf_info32->timestamp.tv_usec = (int32_t) buf_info->timestamp.
-						tv_usec;
+	buf_info32->timestamp.tv_sec = (int32_t) buf_info->timestamp.tv_sec;
+	buf_info32->timestamp.tv_usec = (int32_t) buf_info->timestamp.tv_usec;
 	buf_info32->reserved = buf_info->reserved;
 	buf_info32->type = buf_info->type;
 	buf_info32->user_buf.buf_cnt = buf_info->user_buf.buf_cnt;

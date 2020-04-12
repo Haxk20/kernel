@@ -1,16 +1,3 @@
-/* Copyright (c) 2009-2012, 2014-2016, 2018, The Linux Foundation.
- * All rights reserved.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 and
- * only version 2 as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- */
 #ifndef __UAPI_MSM_CAMERA_H
 #define __UAPI_MSM_CAMERA_H
 
@@ -756,9 +743,6 @@ struct msm_frame {
 	uint32_t frame_id;
 	int stcam_quality_ind;
 	uint32_t stcam_conv_value;
-
-	struct ion_allocation_data ion_alloc;
-	struct ion_fd_data fd_data;
 	int ion_dev_fd;
 };
 
@@ -1708,7 +1692,6 @@ enum actuator_type {
 	ACTUATOR_PIEZO,
 	ACTUATOR_HVCM,
 	ACTUATOR_BIVCM,
-	ACTUATOR_VCM2,
 };
 
 enum msm_actuator_data_type {

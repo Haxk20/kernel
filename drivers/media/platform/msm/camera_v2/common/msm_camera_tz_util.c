@@ -55,8 +55,8 @@
 #endif
 
 /* Update version major number in case the HLOS-TA interface is changed*/
-#define TA_IF_VERSION_MAJ	    2
-#define TA_IF_VERSION_MIN	    1
+#define TA_IF_VERSION_MAJ	    1
+#define TA_IF_VERSION_MIN	    4
 
 #undef CDBG
 #ifdef MSM_CAMERA_TZ_UTIL_VERBOSE
@@ -380,12 +380,11 @@ int32_t msm_camera_tz_load_ta(void)
 						if_version_maj, if_version_min,
 						TA_IF_VERSION_MAJ,
 						TA_IF_VERSION_MIN);
-					rc = qseecom_shutdown_app(
-						&msm_camera_tz_ctrl.
-							ta_qseecom_handle);
-					msm_camera_tz_ctrl.ta_qseecom_handle
-						= EMPTY_QSEECOM_HANDLE;
-					rc = -EFAULT;
+				rc = qseecom_shutdown_app(
+					&msm_camera_tz_ctrl.ta_qseecom_handle);
+				msm_camera_tz_ctrl.ta_qseecom_handle
+					= EMPTY_QSEECOM_HANDLE;
+				rc = -EFAULT;
 				} else {
 					msm_camera_tz_ctrl.ta_enabled = 1;
 				}
@@ -425,8 +424,8 @@ int32_t msm_camera_tz_unload_ta(void)
 	if (msm_camera_tz_ctrl.ta_enabled == 1) {
 		ktime_t startTime = ktime_get();
 
-		rc = qseecom_shutdown_app(&msm_camera_tz_ctrl.
-			ta_qseecom_handle);
+		rc = qseecom_shutdown_app(
+			&msm_camera_tz_ctrl.ta_qseecom_handle);
 		msm_camera_tz_ctrl.ta_qseecom_handle
 			= EMPTY_QSEECOM_HANDLE;
 		msm_camera_tz_ctrl.ta_enabled = 0;

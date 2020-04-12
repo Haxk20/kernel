@@ -637,9 +637,8 @@ static int msm_jpegdma_querycap(struct file *file,
 	cap->bus_info[0] = 0;
 	strlcpy(cap->driver, MSM_JPEGDMA_DRV_NAME, sizeof(cap->driver));
 	strlcpy(cap->card, MSM_JPEGDMA_DRV_NAME, sizeof(cap->card));
-	cap->device_caps = V4L2_CAP_STREAMING |
-			V4L2_CAP_VIDEO_OUTPUT | V4L2_CAP_VIDEO_CAPTURE;
-	cap->capabilities = cap->device_caps | V4L2_CAP_DEVICE_CAPS;
+	cap->capabilities = V4L2_CAP_STREAMING |
+		V4L2_CAP_VIDEO_OUTPUT | V4L2_CAP_VIDEO_CAPTURE;
 
 	return 0;
 }
@@ -936,6 +935,7 @@ static int msm_jpegdma_streamoff(struct file *file,
 {
 	struct jpegdma_ctx *ctx = msm_jpegdma_ctx_from_fh(fh);
 	int ret;
+
 	mutex_lock(&ctx->lock);
 	ret = v4l2_m2m_streamoff(file, ctx->m2m_ctx, buf_type);
 	if (ret < 0)

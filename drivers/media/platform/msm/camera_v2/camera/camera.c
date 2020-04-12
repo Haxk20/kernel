@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2019, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2018, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -666,6 +666,9 @@ static int camera_v4l2_open(struct file *filep)
 	if (!atomic_read(&pvdev->opened)) {
 		pm_stay_awake(&pvdev->vdev->dev);
 
+		/* Disable power collapse latency */
+		msm_pm_qos_update_request(CAMERA_DISABLE_PC_LATENCY);
+
 		/* create a new session when first opened */
 		rc = msm_create_session(pvdev->vdev->num, pvdev->vdev);
 		if (rc < 0) {
@@ -721,6 +724,7 @@ post_fail:
 command_ack_q_fail:
 	msm_destroy_session(pvdev->vdev->num);
 session_fail:
+	msm_pm_qos_update_request(CAMERA_ENABLE_PC_LATENCY);
 	pm_relax(&pvdev->vdev->dev);
 stream_fail:
 	camera_v4l2_vb2_q_release(filep);
@@ -793,6 +797,9 @@ static int camera_v4l2_close(struct file *filep)
 		 */
 		camera_v4l2_vb2_q_release(filep);
 		msm_destroy_session(pvdev->vdev->num);
+
+		/* Enable power collapse latency */
+		msm_pm_qos_update_request(CAMERA_ENABLE_PC_LATENCY);
 		pm_relax(&pvdev->vdev->dev);
 	} else {
 		msm_delete_command_ack_q(pvdev->vdev->num,
@@ -882,7 +889,7 @@ static struct v4l2_file_operations camera_v4l2_fops = {
 int camera_init_v4l2(struct device *dev, unsigned int *session)
 {
 	struct msm_video_device *pvdev;
-	struct v4l2_device *v4l2_dev;
+	struct v4l2_device *v4l2_dev = NULL;
 	int rc = 0;
 
 	pvdev = kzalloc(sizeof(struct msm_video_device),
@@ -968,11 +975,11 @@ media_fail:
 	kzfree(v4l2_dev->mdev);
 mdev_fail:
 #endif
-	kzfree(v4l2_dev);
+	kfree(v4l2_dev);
 v4l2_fail:
 	video_device_release(pvdev->vdev);
 video_fail:
-	kzfree(pvdev);
+	kfree(pvdev);
 init_end:
 	return rc;
 }

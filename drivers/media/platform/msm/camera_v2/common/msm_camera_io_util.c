@@ -1,5 +1,4 @@
-/* Copyright (c) 2011-2014, 2017-2018, The Linux Foundation.
- * All rights reserved.
+/* Copyright (c) 2011-2014, 2017-2019, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -478,8 +477,8 @@ int msm_camera_config_vreg(struct device *dev, struct camera_vreg_t *cam_vreg,
 							reg_ptr[j], 0);
 					}
 					regulator_set_voltage(
-						reg_ptr[j], 0, curr_vreg->
-						max_voltage);
+						reg_ptr[j], 0,
+						curr_vreg->max_voltage);
 				}
 				regulator_put(reg_ptr[j]);
 				reg_ptr[j] = NULL;
@@ -865,4 +864,3 @@ int msm_camera_hw_write_dt_reg_settings(void __iomem *base,
 		pr_err("%s: Failed dt reg setting write\n", __func__);
 	return rc;
 }
-

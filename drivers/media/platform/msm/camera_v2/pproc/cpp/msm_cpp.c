@@ -621,8 +621,8 @@ static int32_t msm_cpp_create_buff_queue(struct cpp_device *cpp_dev,
 {
 	struct msm_cpp_buff_queue_info_t *buff_queue;
 
-	buff_queue = kzalloc(
-		sizeof(struct msm_cpp_buff_queue_info_t) * num_buffq,
+	buff_queue = kcalloc(
+		sizeof(struct msm_cpp_buff_queue_info_t), num_buffq,
 		GFP_KERNEL);
 	if (!buff_queue) {
 		pr_err("Buff queue allocation failure\n");
@@ -631,7 +631,7 @@ static int32_t msm_cpp_create_buff_queue(struct cpp_device *cpp_dev,
 
 	if (cpp_dev->buff_queue) {
 		pr_err("Buff queue not empty\n");
-		kzfree(buff_queue);
+		kfree(buff_queue);
 		return -EINVAL;
 	}
 	cpp_dev->buff_queue = buff_queue;
@@ -887,14 +887,14 @@ static void msm_cpp_iommu_fault_handler(struct iommu_domain *domain,
 				processed_frame[i] =
 					cpp_timer.data.processed_frame[i];
 				ifd = processed_frame[i]->input_buffer_info.fd;
-				ofd = processed_frame[i]->
-					output_buffer_info[0].fd;
-				dfd = processed_frame[i]->
-					duplicate_buffer_info.fd;
-				t0fd = processed_frame[i]->
-					tnr_scratch_buffer_info[0].fd;
-				t1fd = processed_frame[i]->
-					tnr_scratch_buffer_info[1].fd;
+				ofd = processed_frame[
+					i]->output_buffer_info[0].fd;
+				dfd = processed_frame[
+					i]->duplicate_buffer_info.fd;
+				t0fd = processed_frame[
+					i]->tnr_scratch_buffer_info[0].fd;
+				t1fd = processed_frame[
+					i]->tnr_scratch_buffer_info[1].fd;
 				pr_err("Fault on identity=0x%x, frame_id=%03d\n",
 					processed_frame[i]->identity,
 					processed_frame[i]->frame_id);
@@ -1738,8 +1738,9 @@ static int msm_cpp_notify_frame_done(struct cpp_device *cpp_dev,
 				buff_mgr_info.index =
 					processed_frame->batch_info.cont_idx;
 			} else {
-				buff_mgr_info.index = processed_frame->
-					output_buffer_info[0].index;
+				buff_mgr_info.index =
+					processed_frame->output_buffer_info[
+						0].index;
 			}
 			if (put_buf) {
 				rc = msm_cpp_buffer_ops(cpp_dev,
@@ -1761,9 +1762,8 @@ static int msm_cpp_notify_frame_done(struct cpp_device *cpp_dev,
 		}
 
 		if (processed_frame->duplicate_output  &&
-			!processed_frame->
-				duplicate_buffer_info.processed_divert &&
-			!processed_frame->we_disable) {
+		!processed_frame->duplicate_buffer_info.processed_divert
+		&& !processed_frame->we_disable) {
 			int32_t iden = processed_frame->duplicate_identity;
 
 			SWAP_IDENTITY_FOR_BATCH_ON_PREVIEW(processed_frame,
@@ -1842,7 +1842,8 @@ static int msm_cpp_dump_frame_cmd(struct msm_cpp_frame_info_t *frame_info)
 #endif
 
 static void msm_cpp_flush_queue_and_release_buffer(struct cpp_device *cpp_dev,
-	int queue_len) {
+	int queue_len)
+{
 	uint32_t i;
 
 	while (queue_len) {
@@ -2969,6 +2970,14 @@ static int msm_cpp_cfg(struct cpp_device *cpp_dev,
 		pr_err("%s: Error allocating frame\n", __func__);
 		rc = -EINVAL;
 	} else {
+		if ((frame->msg_len == 0) ||
+			(frame->msg_len > MSM_CPP_MAX_FRAME_LENGTH)) {
+			pr_err("%s:%d: Invalid frame len:%d\n", __func__,
+				__LINE__, frame->msg_len);
+			kfree(frame);
+			return -EINVAL;
+		}
+
 		rc = msm_cpp_cfg_frame(cpp_dev, frame);
 		if (rc >= 0) {
 			for (i = 0; i < num_buff; i++) {
@@ -3347,7 +3356,7 @@ static long msm_cpp_subdev_ioctl(struct v4l2_subdev *sd,
 
 		if (u_stream_buff_info->num_buffs != 0) {
 			k_stream_buff_info.buffer_info =
-				kzalloc(k_stream_buff_info.num_buffs *
+				kcalloc(k_stream_buff_info.num_buffs,
 				sizeof(struct msm_cpp_buffer_info_t),
 				GFP_KERNEL);
 			if (ZERO_OR_NULL_PTR(k_stream_buff_info.buffer_info)) {
@@ -3666,7 +3675,7 @@ STREAM_BUFF_END:
 			break;
 		}
 		buff_mgr_info.frame_id = frame_info.frame_id;
-		rc = msm_cpp_buffer_ops(cpp_dev, VIDIOC_MSM_BUF_MNGR_BUF_DONE,
+		rc = msm_cpp_buffer_ops(cpp_dev, VIDIOC_MSM_BUF_MNGR_BUF_ERROR,
 			0x0, &buff_mgr_info);
 		if (rc < 0) {
 			pr_err("error in buf done\n");
@@ -4463,36 +4472,7 @@ static struct v4l2_file_operations msm_cpp_v4l2_subdev_fops = {
 	.compat_ioctl32 = msm_cpp_subdev_fops_compat_ioctl,
 #endif
 };
-
-static  int msm_cpp_update_gdscrv1_status(struct cpp_device *cpp_dev,
-	bool status)
-{
-	int value = 0, rc = 0;
-
-	if (!cpp_dev) {
-		pr_err("%s: cpp device invalid\n", __func__);
-		rc = -EINVAL;
-		goto end;
-	}
-
-	if (cpp_dev->camss_cpp_base) {
-		value = msm_camera_io_r(cpp_dev->camss_cpp_base);
-		pr_debug("value from camss cpp %x, status %d\n", value, status);
-		if (status) {
-			value &= CPP_GDSCR_SW_COLLAPSE_ENABLE;
-			value |= CPP_GDSCR_HW_CONTROL_ENABLE;
-		} else {
-			value |= CPP_GDSCR_HW_CONTROL_DISABLE;
-			value &= CPP_GDSCR_SW_COLLAPSE_DISABLE;
-		}
-		pr_debug("value %x after camss cpp mask\n", value);
-		msm_camera_io_w(value, cpp_dev->camss_cpp_base);
-	}
-end:
-	return rc;
-}
-
-static  int msm_cpp_update_gdscrv2_status(struct cpp_device *cpp_dev,
+static  int msm_cpp_update_gdscr_status(struct cpp_device *cpp_dev,
 	bool status)
 {
 	int rc = 0;
@@ -4516,19 +4496,6 @@ static  int msm_cpp_update_gdscrv2_status(struct cpp_device *cpp_dev,
 end:
 	return rc;
 }
-
-static  int msm_cpp_update_gdscr_status(struct cpp_device *cpp_dev,
-	bool status)
-{
-	if (of_machine_is_compatible("qcom,msm8936") ||
-	    of_machine_is_compatible("qcom,msm8939") ||
-	    of_machine_is_compatible("qcom,msm8956") ||
-	    of_machine_is_compatible("qcom,apq8056"))
-		return msm_cpp_update_gdscrv1_status(cpp_dev, status);
-
-	return msm_cpp_update_gdscrv2_status(cpp_dev, status);
-}
-
 static void msm_cpp_set_vbif_reg_values(struct cpp_device *cpp_dev)
 {
 	int i, reg, val;
@@ -4568,8 +4535,8 @@ static void msm_cpp_set_vbif_reg_values(struct cpp_device *cpp_dev)
 }
 
 static int msm_cpp_buffer_private_ops(struct cpp_device *cpp_dev,
-	uint32_t buff_mgr_ops, uint32_t id, void *arg) {
-
+	uint32_t buff_mgr_ops, uint32_t id, void *arg)
+{
 	int32_t rc = 0;
 
 	switch (id) {
@@ -4632,14 +4599,6 @@ static int cpp_probe(struct platform_device *pdev)
 	memset(&cpp_vbif, 0, sizeof(struct msm_cpp_vbif_data));
 	cpp_dev->vbif_data = &cpp_vbif;
 
-	/* camss_cpp is optional, only for MSM8916-class and family-B SoC */
-	cpp_dev->camss_cpp_base =
-		msm_camera_get_reg_base(pdev, "camss_cpp", true);
-	if (!cpp_dev->camss_cpp_base) {
-		rc = -ENOMEM;
-		pr_err("optional: camss_cpp_base not present\n");
-	}
-
 	cpp_dev->base =
 		msm_camera_get_reg_base(pdev, "cpp", true);
 	if (!cpp_dev->base) {
@@ -4691,15 +4650,6 @@ static int cpp_probe(struct platform_device *pdev)
 			msm_camera_set_clk_flags(cpp_dev->cpp_clk[i],
 				CLKFLAG_NORETAIN_PERIPH);
 		}
-	}
-
-	if (of_find_property(pdev->dev.of_node, "qcom,cpp-cx-ipeak", NULL)) {
-		cpp_dev->cpp_cx_ipeak = cx_ipeak_register(
-			pdev->dev.of_node, "qcom,cpp-cx-ipeak");
-		if (cpp_dev->cpp_cx_ipeak)
-			CPP_DBG("Cx ipeak Registration Successful ");
-		else
-			pr_err("Cx ipeak Registration Unsuccessful");
 	}
 
 	if (of_find_property(pdev->dev.of_node, "qcom,cpp-cx-ipeak", NULL)) {

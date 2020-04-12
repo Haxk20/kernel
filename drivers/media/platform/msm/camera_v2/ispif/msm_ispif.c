@@ -1005,8 +1005,8 @@ static int msm_ispif_config(struct ispif_device *ispif,
 }
 
 static void msm_ispif_config_stereo(struct ispif_device *ispif,
-	struct msm_ispif_param_data_ext *params, int use_line_width) {
-
+	struct msm_ispif_param_data_ext *params, int use_line_width)
+{
 	int i;
 	enum msm_ispif_vfe_intf vfe_intf;
 	uint32_t stereo_3d_threshold = STEREO_DEFAULT_3D_THRESHOLD;
