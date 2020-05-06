@@ -4230,11 +4230,8 @@ static inline void __unprepare_ahb2axi_bridge(struct venus_hfi_device *device,
 	if (version != (0x5 << 28 | 0x10 << 16))
 		return;
 
-	if (!(device->intr_status & VIDC_WRAPPER_INTR_STATUS_A2HWD_BMSK))
-		return;
-
 	dprintk(VIDC_ERR,
-		"reset axi cbcr to recover from hung\n");
+		"reset axi cbcr to recover\n");
 
 	/* read registers */
 	axi0_cbcr_status = __read_gcc_register(device, VIDEO_GCC_AXI0_CBCR);
@@ -5001,6 +4998,7 @@ fail_vote_buses:
 	return rc;
 }
 
+
 static void __venus_power_off(struct venus_hfi_device *device, bool halt_axi)
 {
 	u32 version;
@@ -5011,7 +5009,8 @@ static void __venus_power_off(struct venus_hfi_device *device, bool halt_axi)
 	if (!(device->intr_status & VIDC_WRAPPER_INTR_STATUS_A2HWD_BMSK))
 		disable_irq_nosync(device->hal_data->irq);
 
-	version = __read_register(device, VIDC_WRAPPER_HW_VERSION);
+	if (axi_reset)
+		version = __read_register(device, VIDC_WRAPPER_HW_VERSION);
 
 	/* Halt the AXI to make sure there are no pending transactions.
 	 * Clocks should be unprepared after making sure axi is halted.
@@ -5022,7 +5021,8 @@ static void __venus_power_off(struct venus_hfi_device *device, bool halt_axi)
 
 	__disable_unprepare_clks(device);
 
-	__unprepare_ahb2axi_bridge(device, version);
+	if (axi_reset)
+		__unprepare_ahb2axi_bridge(device, version);
 
 	device->intr_status = 0;
 

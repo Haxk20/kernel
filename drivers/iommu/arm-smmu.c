@@ -5570,6 +5570,11 @@ static phys_addr_t qsmmuv500_iova_to_phys(
 				       ARM_SMMU_CB_RESUME);
 	}
 
+	/* Only one concurrent atos operation */
+	ret = qsmmuv500_ecats_lock(smmu_domain, tbu, &flags);
+	if (ret)
+		goto out_resume;
+
 redo:
 	/* Set address and stream-id */
 	val = readq_relaxed(tbu->base + DEBUG_SID_HALT_REG);

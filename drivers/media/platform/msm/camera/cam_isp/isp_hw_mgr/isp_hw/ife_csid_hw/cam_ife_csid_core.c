@@ -3424,6 +3424,7 @@ static int cam_csid_event_dispatch_process(void *priv, void *data)
 		CAM_ERR(CAM_ISP, "Invalid parameters");
 		return -EINVAL;
 	}
+
 	if (!csid_hw->event_cb || !csid_hw->ctx) {
 		CAM_ERR_RATE_LIMIT(CAM_ISP,
 			"hw_idx %d Invalid args %pK %pK",

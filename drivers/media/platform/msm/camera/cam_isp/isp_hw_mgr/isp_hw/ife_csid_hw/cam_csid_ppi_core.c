@@ -151,9 +151,10 @@ static int cam_csid_ppi_disable_hw(struct cam_csid_ppi_hw *ppi_hw)
 	CAM_DBG(CAM_ISP, "%s:PPI Reset Done\n", __func__);
 
 	/* disable the clocks */
-	for (i = 0; i < soc_info->num_clk; i++)
+	for (i = 0; i < soc_info->num_clk; i++) {
 		cam_soc_util_clk_disable(soc_info->clk[i],
 			soc_info->clk_name[i]);
+	}
 
 	/* disable the interrupt */
 	cam_io_w_mb(0, soc_info->reg_map[0].mem_base +

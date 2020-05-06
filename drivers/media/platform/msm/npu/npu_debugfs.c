@@ -59,7 +59,6 @@ static const struct file_operations npu_reg_fops = {
 	.open = npu_debug_reg_open,
 	.release = npu_debug_reg_release,
 	.read = npu_debug_reg_read,
-	.write = npu_debug_reg_write,
 };
 
 static const struct file_operations npu_off_fops = {
@@ -125,45 +124,35 @@ static int npu_debug_reg_release(struct inode *inode, struct file *file)
 	return 0;
 }
 
+static int npu_debug_reg_open(struct inode *inode, struct file *file)
+{
+	struct npu_debugfs_reg_ctx *reg_ctx;
+
+	reg_ctx = kzalloc(sizeof(*reg_ctx), GFP_KERNEL);
+	if (!reg_ctx)
+		return -ENOMEM;
+
+	/* non-seekable */
+	file->f_mode &= ~(FMODE_LSEEK | FMODE_PREAD | FMODE_PWRITE);
+	reg_ctx->npu_dev = inode->i_private;
+	file->private_data = reg_ctx;
+	return 0;
+}
+
+static int npu_debug_reg_release(struct inode *inode, struct file *file)
+{
+	struct npu_debugfs_reg_ctx *reg_ctx = file->private_data;
+
+	kfree(reg_ctx->buf);
+	kfree(reg_ctx);
+	file->private_data = NULL;
+	return 0;
+}
+
 /* -------------------------------------------------------------------------
  * Function Implementations - Reg Read/Write
  * -------------------------------------------------------------------------
  */
-static ssize_t npu_debug_reg_write(struct file *file,
-		const char __user *user_buf, size_t count, loff_t *ppos)
-{
-	size_t off;
-	uint32_t data, cnt;
-	struct npu_device *npu_dev = file->private_data;
-	char buf[24];
-
-	if (count >= sizeof(buf))
-		return -EINVAL;
-
-	if (copy_from_user(buf, user_buf, count))
-		return -EFAULT;
-
-	buf[count] = 0;	/* end of string */
-
-	cnt = sscanf(buf, "%zx %x", &off, &data);
-	pr_debug("%s %s 0x%zx, 0x%08x\n", __func__, buf, off, data);
-
-	return count;
-	if (cnt < 2)
-		return -EINVAL;
-
-	if (npu_enable_core_power(npu_dev))
-		return -EPERM;
-
-	REGW(npu_dev, off, data);
-
-	npu_disable_core_power(npu_dev);
-
-	pr_debug("write: addr=%zx data=%x\n", off, data);
-
-	return count;
-}
-
 static ssize_t npu_debug_reg_read(struct file *file,
 			char __user *user_buf, size_t count, loff_t *ppos)
 {

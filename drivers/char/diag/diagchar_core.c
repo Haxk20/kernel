@@ -4452,3 +4452,4 @@ static void diagchar_exit(void)
 
 module_init(diagchar_init);
 module_exit(diagchar_exit);
+

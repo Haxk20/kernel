@@ -866,7 +866,6 @@ static int  qcom_ice_suspend(struct platform_device *pdev)
 			return -ETIME;
 		}
 	}
-
 	atomic_set(&ice_dev->is_ice_suspended, 1);
 
 	return 0;

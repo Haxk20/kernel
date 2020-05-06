@@ -102,10 +102,10 @@ struct global_pt_entry {
 	char name[32];
 };
 
-#define GLOBAL_MAP_PAGES(mmu) (KGSL_IOMMU_GLOBAL_MEM_SIZE(mmu) >> PAGE_SHIFT)
+#define GLOBAL_MAP_PAGES (KGSL_IOMMU_GLOBAL_MEM_SIZE >> PAGE_SHIFT)
 
 static struct global_pt_entry global_pt_entries[GLOBAL_PT_ENTRIES];
-static DECLARE_BITMAP(global_map, (KGSL_IOMMU_GLOBAL_MEM_SIZE_NG >> PAGE_SHIFT));
+static DECLARE_BITMAP(global_map, GLOBAL_MAP_PAGES);
 
 static int secure_global_size;
 static int global_pt_count;
@@ -233,20 +233,20 @@ static void kgsl_iommu_add_global(struct kgsl_mmu *mmu,
 	if (WARN_ON(global_pt_count >= GLOBAL_PT_ENTRIES))
 		return;
 
-	if (WARN_ON(size > KGSL_IOMMU_GLOBAL_MEM_SIZE(mmu)))
+	if (WARN_ON(size > KGSL_IOMMU_GLOBAL_MEM_SIZE))
 		return;
 
 	if (memdesc->priv & KGSL_MEMDESC_RANDOM) {
-		u32 range = GLOBAL_MAP_PAGES(mmu) - (size >> PAGE_SHIFT);
+		u32 range = GLOBAL_MAP_PAGES - (size >> PAGE_SHIFT);
 
 		start = get_random_int() % range;
 	}
 
 	while (start >= 0) {
-		bit = bitmap_find_next_zero_area(global_map, GLOBAL_MAP_PAGES(mmu),
+		bit = bitmap_find_next_zero_area(global_map, GLOBAL_MAP_PAGES,
 			start, size >> PAGE_SHIFT, 0);
 
-		if (bit < GLOBAL_MAP_PAGES(mmu))
+		if (bit < GLOBAL_MAP_PAGES)
 			break;
 
 		start--;
