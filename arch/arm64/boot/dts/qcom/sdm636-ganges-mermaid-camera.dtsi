@@ -173,8 +173,8 @@
 		qcom,gpio-req-tbl-num   = <0 1>;
 		qcom,gpio-req-tbl-flags = <1 0>;
 		qcom,gpio-req-tbl-label = "CAMIF_MCLK3", "CAM_RESET1";
-		qcom,sensor-position = <1>;
-		qcom,sensor-mode = <1>;
+		qcom,sensor-position = <0>;
+		qcom,sensor-mode = <0>;
 		qcom,cci-master = <1>;
 		status = "ok";
 		clocks = <&clock_mmss MCLK3_CLK_SRC>,
