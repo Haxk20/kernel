@@ -235,6 +235,21 @@
 		status = "ok";
 	};
 
+	qcom,i2c_custom_mode {
+		qcom,hw-thigh = <38>;
+		qcom,hw-tlow = <56>;
+		qcom,hw-tsu-sto = <40>;
+		qcom,hw-tsu-sta = <40>;
+		qcom,hw-thd-dat = <22>;
+		qcom,hw-thd-sta = <35>;
+		qcom,hw-tbuf = <62>;
+		qcom,hw-scl-stretch-en = <1>;
+		qcom,hw-trdhld = <6>;
+		qcom,hw-tsp = <3>;
+		qcom,cci-clk-src = <37500000>;
+		status = "ok";
+	};
+
 	qcom,i2c_fast_plus_mode {
 		qcom,hw-thigh = <16>;
 		qcom,hw-tlow = <22>;
@@ -242,8 +257,8 @@
 		qcom,hw-tsu-sta = <18>;
 		qcom,hw-thd-dat = <16>;
 		qcom,hw-thd-sta = <15>;
-		qcom,hw-tbuf = <19>;
-		qcom,hw-scl-stretch-en = <1>;
+		qcom,hw-tbuf = <24>;
+		qcom,hw-scl-stretch-en = <0>;
 		qcom,hw-trdhld = <3>;
 		qcom,hw-tsp = <3>;
 		qcom,cci-clk-src = <37500000>;
