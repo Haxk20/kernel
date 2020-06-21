@@ -257,6 +257,9 @@ static void cam_cci_init_clk_params(struct cci_device *cci_dev)
 		else if (count == I2C_FAST_PLUS_MODE)
 			src_node = of_find_node_by_name(of_node,
 				"qcom,i2c_fast_plus_mode");
+		else if (count == I2C_HYPER_DRIVE_MODE)
+			src_node = of_find_node_by_name(of_node,
+				"qcom,i2c_hyper_drive_mode");
 		else
 			src_node = of_find_node_by_name(of_node,
 				"qcom,i2c_custom_mode");
